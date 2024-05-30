@@ -23,11 +23,11 @@ export default function UpdatePost() {
   const { postId } = useParams();
 
   const navigate = useNavigate();
-    const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state) => state.user);
 
   useEffect(() => {
-    try {
-      const fetchPost = async () => {
+    const fetchPost = async () => {
+      try {
         const res = await fetch(`/api/post/getposts?postId=${postId}`);
         const data = await res.json();
         if (!res.ok) {
@@ -39,12 +39,11 @@ export default function UpdatePost() {
           setPublishError(null);
           setFormData(data.posts[0]);
         }
-      };
-
-      fetchPost();
-    } catch (error) {
-      console.log(error.message);
-    }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+    fetchPost();
   }, [postId]);
 
   const handleUpdloadImage = async () => {
@@ -73,7 +72,10 @@ export default function UpdatePost() {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
             setImageUploadProgress(null);
             setImageUploadError(null);
-            setFormData({ ...formData, image: downloadURL });
+            setFormData((prevData) => ({
+              ...prevData,
+              image: downloadURL,
+            }));
           });
         }
       );
@@ -83,6 +85,7 @@ export default function UpdatePost() {
       console.log(error);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -107,6 +110,23 @@ export default function UpdatePost() {
       setPublishError('Something went wrong');
     }
   };
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [id]: value,
+    }));
+  };
+
+  const handleSelectChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      category: value,
+    }));
+  };
+
   return (
     <div className='p-3 max-w-3xl mx-auto min-h-screen'>
       <h1 className='text-center text-3xl my-7 font-semibold'>Update post</h1>
@@ -118,16 +138,13 @@ export default function UpdatePost() {
             required
             id='title'
             className='flex-1'
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            value={formData.title}
+            onChange={handleInputChange}
+            value={formData.title || ''}
           />
           <Select
-            onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value })
-            }
-            value={formData.category}
+            id="category"
+            onChange={handleSelectChange}
+            value={formData.category || 'uncategorized'}
           >
             <option value='uncategorized'>Select a category</option>
             <option value='javascript'>JavaScript</option>
@@ -171,12 +188,15 @@ export default function UpdatePost() {
         )}
         <ReactQuill
           theme='snow'
-          value={formData.content}
+          value={formData.content || ''}
           placeholder='Write something...'
           className='h-72 mb-12'
           required
           onChange={(value) => {
-            setFormData({ ...formData, content: value });
+            setFormData((prevData) => ({
+              ...prevData,
+              content: value,
+            }));
           }}
         />
         <Button type='submit' gradientDuoTone='purpleToPink'>
